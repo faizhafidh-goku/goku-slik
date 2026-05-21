@@ -547,7 +547,7 @@
             const plafonAwal = toNumber(row.plafonAwal);
             const plafonEfektif = toNumber(row.plafon) || plafonAwal;
             const outstanding = toNumber(row.bakiDebet);
-            const rate = toNumber(row.sukuBungaImbalan);
+            const rate = String(row.sukuBungaImbalan);
             const quality = clampInt(row.kualitas, 1, 5);
             const currentDays = toNumber(row.jumlahHariTunggakan);
             const startDate = parseSlikDate(row.tanggalMulai || row.tanggalAwalKredit || row.tanggalAkadAwal);
