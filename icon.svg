@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SLIK Presisi">
+    <defs>
+        <linearGradient id="bg" x1="64" y1="36" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0B5CFF"/>
+            <stop offset="0.56" stop-color="#0877C8"/>
+            <stop offset="1" stop-color="#09A68F"/>
+        </linearGradient>
+        <linearGradient id="card" x1="128" y1="86" x2="392" y2="430" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF"/>
+            <stop offset="1" stop-color="#EEF7FF"/>
+        </linearGradient>
+        <filter id="shadow" x="60" y="58" width="392" height="418" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+            <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#063B75" flood-opacity="0.28"/>
+        </filter>
+    </defs>
+
+    <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+    <circle cx="390" cy="102" r="74" fill="#FFFFFF" opacity="0.14"/>
+    <circle cx="98" cy="402" r="96" fill="#003F88" opacity="0.12"/>
+
+    <g filter="url(#shadow)">
+        <path d="M140 76h178l70 70v272c0 20-16 36-36 36H140c-20 0-36-16-36-36V112c0-20 16-36 36-36z" fill="url(#card)"/>
+        <path d="M318 76v56c0 18 14 32 32 32h38l-70-88z" fill="#D7EBFF"/>
+    </g>
+
+    <rect x="138" y="178" width="192" height="18" rx="9" fill="#20415F" opacity="0.2"/>
+    <rect x="138" y="214" width="236" height="18" rx="9" fill="#20415F" opacity="0.16"/>
+    <rect x="138" y="250" width="142" height="18" rx="9" fill="#20415F" opacity="0.14"/>
+
+    <path d="M145 348l58-58 54 38 86-104" fill="none" stroke="#0B73E8" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="145" cy="348" r="14" fill="#0B73E8"/>
+    <circle cx="203" cy="290" r="14" fill="#0B73E8"/>
+    <circle cx="257" cy="328" r="14" fill="#0B73E8"/>
+    <circle cx="343" cy="224" r="14" fill="#0B73E8"/>
+
+    <path d="M364 282l54 20v45c0 44-23 78-54 92-31-14-54-48-54-92v-45l54-20z" fill="#063B75"/>
+    <path d="M339 352l18 18 36-48" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <circle cx="158" cy="126" r="34" fill="#09A68F"/>
+    <path d="M145 126h27M145 113h21c12 0 20 6 20 17s-8 17-20 17h-21V105" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

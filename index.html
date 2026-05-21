@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SLIK Angsuran Presisi</title>
+    <meta name="theme-color" content="#165dcc">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SLIK Presisi">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="application-name" content="SLIK Presisi">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon-180.png">
+    <script src="html2pdf.bundle.min.js" onload="window.__pdfScriptLoaded=true" onerror="window.__pdfScriptError=true"></script>
+    <style>
+        :root {
+            --ink: #000;
+            --paper: #fff;
+            --panel: #f4f6f8;
+            --line: #000;
+            --muted: #555;
+            --blue: #165dcc;
+            --red: #b3261e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: #e9edf2;
+            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            min-height: 100%;
+            overscroll-behavior: none;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            -webkit-tap-highlight-color: rgba(22, 93, 204, 0.14);
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        .app {
+            width: min(1480px, calc(100vw - 24px));
+            margin: 12px auto 24px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: var(--paper);
+            border: 1px solid #b9c2ce;
+            position: sticky;
+            top: env(safe-area-inset-top);
+            z-index: 5;
+        }
+
+        .tools-left,
+        .tools-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .file-label,
+        .btn,
+        .select {
+            min-height: 36px;
+            border: 1px solid #8d98a7;
+            background: var(--paper);
+            color: var(--ink);
+            padding: 7px 10px;
+            cursor: pointer;
+            border-radius: 0;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            border-color: var(--blue);
+            background: var(--blue);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .btn-danger {
+            border-color: var(--red);
+            background: var(--red);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .select {
+            min-width: 190px;
+            cursor: default;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .status {
+            min-width: 250px;
+            color: var(--muted);
+            text-align: right;
+        }
+
+        .sheet-wrap {
+            background: var(--paper);
+            border: 1px solid #b9c2ce;
+            padding: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #printArea {
+            width: 980px;
+            background: var(--paper);
+            padding: 0;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr 1fr;
+            border-left: 1px solid var(--line);
+            border-top: 1px solid var(--line);
+        }
+
+        .meta-cell {
+            min-height: 22px;
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            padding: 4px 6px;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .meta-cell strong {
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--line);
+            height: 20px;
+            padding: 2px 4px;
+            line-height: 1.08;
+            vertical-align: middle;
+            background: var(--paper);
+        }
+
+        thead th {
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        tbody td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: clip;
+        }
+
+        tfoot td {
+            font-weight: 700;
+            background: #f2f2f2;
+        }
+
+        .name-row th {
+            height: 18px;
+            font-size: 10px;
+            letter-spacing: 0;
+            text-align: center;
+            background: var(--paper);
+        }
+
+        .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .col-name { width: 240px; }
+        .col-os { width: 120px; }
+        .col-date { width: 84px; }
+        .col-condition { width: 100px; }
+        .col-quality { width: 62px; }
+        .col-note { width: 230px; }
+        .col-sim { width: 116px; }
+
+        .row-problem td {
+            background: #fff2f0;
+        }
+
+        .row-active td {
+            background: #fff;
+        }
+
+        .history-panel {
+            border-left: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            padding: 6px;
+            font-size: 10px;
+            line-height: 1.35;
+        }
+
+        .history-title {
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .history-list {
+            margin: 0;
+            padding-left: 14px;
+        }
+
+        .history-list li {
+            margin: 1px 0;
+        }
+
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            height: 48px;
+        }
+
+        .print-mode .toolbar {
+            display: none;
+        }
+
+        .print-mode .app {
+            width: auto;
+            margin: 0;
+        }
+
+        .print-mode .sheet-wrap {
+            border: 0;
+            overflow: visible;
+        }
+
+        .print-mode #printArea {
+            width: 100%;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .app {
+                width: auto;
+                margin: 0;
+            }
+
+            .sheet-wrap {
+                border: 0;
+                overflow: visible;
+            }
+
+            #printArea {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .app {
+                width: 100%;
+                margin: 0;
+                padding: 6px;
+            }
+
+            .toolbar {
+                align-items: stretch;
+                flex-direction: column;
+                margin-bottom: 6px;
+                padding: 8px;
+            }
+
+            .tools-left,
+            .tools-right {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .file-label,
+            .btn,
+            .select,
+            .status {
+                width: 100%;
+                text-align: left;
+                min-height: 44px;
+            }
+
+            .status {
+                min-width: 0;
+                line-height: 1.25;
+            }
+
+            .sheet-wrap {
+                border-color: #8d98a7;
+            }
+
+            #printArea {
+                width: 860px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <section class="toolbar" aria-label="Kontrol aplikasi">
+            <div class="tools-left">
+                <label class="file-label" for="fileInput">Pilih TXT SLIK</label>
+                <input id="fileInput" type="file" accept=".txt,.json,application/json">
+                <button class="btn" id="loadSampleBtn" type="button">Muat TXT Contoh</button>
+                <select class="select" id="filterSelect" aria-label="Filter fasilitas">
+                    <option value="active">Aktif + Hapus Buku</option>
+                    <option value="all">Semua Kredit</option>
+                    <option value="lancar">Kredit Lancar</option>
+                    <option value="kolek">Kolektabilitas/Tunggakan</option>
+                    <option value="lunas">Lunas</option>
+                </select>
+            </div>
+            <div class="tools-right">
+                <button class="btn" id="installBtn" type="button" hidden>Install App</button>
+                <button class="btn btn-primary" id="exportBtn" type="button" disabled>Export PDF</button>
+                <button class="btn btn-danger" id="resetBtn" type="button" disabled>Reset</button>
+                <div class="status" id="statusText" aria-live="polite">Belum ada data</div>
+            </div>
+        </section>
+
+        <section class="sheet-wrap">
+            <div id="printArea">
+                <div class="meta-grid" id="metaGrid">
+                    <div class="meta-cell"><strong>Nama Debitur:</strong> -</div>
+                    <div class="meta-cell"><strong>No. Identitas:</strong> -</div>
+                    <div class="meta-cell"><strong>Posisi Data:</strong> -</div>
+                    <div class="meta-cell"><strong>Tanggal Tarik:</strong> -</div>
+                </div>
+
+                <table id="reportTable" aria-label="Tabel simulasi angsuran SLIK">
+                    <thead>
+                        <tr class="name-row">
+                            <th id="debtorTitle" colspan="7">-</th>
+                        </tr>
+                        <tr>
+                            <th class="col-name">Nama Pelapor</th>
+                            <th class="col-os">Outstanding</th>
+                            <th class="col-date">Jatuh Tempo</th>
+                            <th class="col-condition">Kondisi</th>
+                            <th class="col-quality">Kualitas</th>
+                            <th class="col-note">Keterangan</th>
+                            <th class="col-sim">Simulasi Angsuran</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td class="empty" colspan="7">Data akan tampil setelah file TXT dimuat.</td>
+                        </tr>
+                    </tbody>
+                    <tfoot id="tableFoot"></tfoot>
+                </table>
+
+                <div class="history-panel" id="historyPanel">
+                    <div class="history-title">Riwayat Kolektabilitas/Tunggakan</div>
+                    <div id="historyContent">-</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const SAMPLE_FILE = "KTP_3208011311980002.txt";
+        const state = {
+            fileName: "",
+            header: {},
+            individual: {},
+            debtor: {},
+            facilities: [],
+            viewRows: []
+        };
+
+        const fileInput = document.getElementById("fileInput");
+        const loadSampleBtn = document.getElementById("loadSampleBtn");
+        const filterSelect = document.getElementById("filterSelect");
+        const exportBtn = document.getElementById("exportBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const installBtn = document.getElementById("installBtn");
+        const statusText = document.getElementById("statusText");
+        const tableBody = document.getElementById("tableBody");
+        const tableFoot = document.getElementById("tableFoot");
+        const historyContent = document.getElementById("historyContent");
+        let deferredInstallPrompt = null;
+
+        fileInput.addEventListener("change", async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                setStatus("Membaca " + file.name);
+                const text = await file.text();
+                loadSlikText(text, file.name);
+            } catch (error) {
+                showError(error);
+            } finally {
+                fileInput.value = "";
+            }
+        });
+
+        loadSampleBtn.addEventListener("click", async () => {
+            try {
+                setStatus("Membaca " + SAMPLE_FILE);
+                const response = await fetch(SAMPLE_FILE, { cache: "no-store" });
+                if (!response.ok) throw new Error("File contoh tidak ditemukan di folder HTML.");
+                loadSlikText(await response.text(), SAMPLE_FILE);
+            } catch (error) {
+                showError(error);
+            }
+        });
+
+        filterSelect.addEventListener("change", renderCurrentFilter);
+        exportBtn.addEventListener("click", exportPdf);
+        resetBtn.addEventListener("click", resetApp);
+        installBtn.addEventListener("click", installApp);
+
+        window.addEventListener("DOMContentLoaded", () => {
+            setupPwa();
+            if (isLocalPreview()) {
+                loadSampleBtn.click();
+            } else {
+                loadSampleBtn.hidden = true;
+                setStatus("Pilih TXT SLIK dari perangkat untuk mulai.");
+            }
+        });
+
+        window.addEventListener("beforeinstallprompt", (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            if (!isStandaloneMode()) {
+                installBtn.hidden = false;
+            }
+        });
+
+        window.addEventListener("appinstalled", () => {
+            deferredInstallPrompt = null;
+            installBtn.hidden = true;
+            setStatus("Aplikasi sudah terpasang.");
+        });
+
+        function setupPwa() {
+            if (isStandaloneMode()) {
+                document.body.classList.add("standalone");
+                installBtn.hidden = true;
+            } else if (isIos()) {
+                installBtn.hidden = false;
+            }
+
+            if ("serviceWorker" in navigator && location.protocol !== "file:") {
+                navigator.serviceWorker.register("service-worker.js").catch(() => {
+                    setStatus("Mode offline belum aktif.");
+                });
+            }
+        }
+
+        async function installApp() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                installBtn.hidden = true;
+                return;
+            }
+
+            if (isIos()) {
+                setStatus("iOS: buka Share, lalu Add to Home Screen.");
+                return;
+            }
+
+            setStatus("Android: buka menu browser, lalu Install app.");
+        }
+
+        function loadSlikText(text, fileName) {
+            const data = JSON.parse(text);
+            const individual = data.individual || {};
+            const debtor = (individual.dataPokokDebitur || [])[0] || {};
+            const rawFacilities = (((individual.fasilitas || {}).kreditPembiayan)
+                || ((individual.fasilitas || {}).kreditPembiayaan)
+                || []);
+
+            if (!rawFacilities.length) {
+                throw new Error("Data kreditPembiayan tidak ditemukan di TXT.");
+            }
+
+            state.fileName = fileName;
+            state.header = data.header || {};
+            state.individual = individual;
+            state.debtor = debtor;
+            state.facilities = rawFacilities.map(normalizeFacility);
+            filterSelect.value = "active";
+
+            exportBtn.disabled = false;
+            resetBtn.disabled = false;
+            setStatus(rawFacilities.length + " fasilitas dimuat dari " + fileName);
+            renderMeta();
+            renderCurrentFilter();
+        }
+
+        function normalizeFacility(row, index) {
+            const plafonAwal = toNumber(row.plafonAwal);
+            const plafonEfektif = toNumber(row.plafon) || plafonAwal;
+            const outstanding = toNumber(row.bakiDebet);
+            const rate = toNumber(row.sukuBungaImbalan);
+            const quality = clampInt(row.kualitas, 1, 5);
+            const currentDays = toNumber(row.jumlahHariTunggakan);
+            const startDate = parseSlikDate(row.tanggalMulai || row.tanggalAwalKredit || row.tanggalAkadAwal);
+            const maturityDate = parseSlikDate(row.tanggalJatuhTempo);
+            const tenorMonths = monthDiff(startDate, maturityDate);
+            const rateTypeRaw = String(row.jenisSukuBungaImbalanKet || row.sukuBungaKet || "");
+            const creditType = String(row.jenisKreditPembiayaanKet || row.jenisKreditKet || "-");
+            const condition = String(row.kondisiKet || "-").replace(/\s+/g, "");
+            const history = collectHistory(row);
+            const problemHistory = history.filter((item) => item.kol > 1 || item.days > 0);
+            const hasProblem = quality > 1 || currentDays > 0 || problemHistory.length > 0 || isWrittenOffCondition(condition);
+            const simulation = calculateInstallment({
+                plafonAwal,
+                plafonEfektif,
+                outstanding,
+                rate,
+                rateTypeRaw,
+                creditType,
+                condition,
+                tenorMonths
+            });
+
+            return {
+                id: index + 1,
+                reporter: compactName(row.ljkKet || row.ljk || "-"),
+                plafonAwal,
+                plafonEfektif,
+                outstanding,
+                rate,
+                rateType: normalizeRateLabel(rateTypeRaw),
+                startDate,
+                maturityDate,
+                startText: formatDate(startDate),
+                maturityText: formatDate(maturityDate),
+                condition,
+                quality,
+                qualityText: row.kualitasKet || qualityLabel(quality),
+                note: buildNote(row, quality, currentDays, problemHistory),
+                creditType,
+                tenorMonths,
+                currentDays,
+                history,
+                problemHistory,
+                hasProblem,
+                simulation,
+                raw: row
+            };
+        }
+
+        function calculateInstallment(item) {
+            if (!/aktif/i.test(item.condition) || item.outstanding <= 0) {
+                return 0;
+            }
+
+            const annualRate = item.rate / 100;
+            const monthlyRate = annualRate / 12;
+            const tenor = Math.max(1, item.tenorMonths);
+            const creditKey = normalizeText(item.creditType);
+            const rateKey = normalizeText(item.rateTypeRaw);
+
+            if (creditKey.includes("kartukredit") || creditKey.includes("kartupembiayaan")) {
+                return roundRupiah(item.outstanding * 0.1);
+            }
+
+            const principal = Math.max(item.plafonAwal, item.plafonEfektif, item.outstanding);
+
+            if (annualRate <= 0) {
+                return roundRupiah(principal / tenor);
+            }
+
+            if (rateKey.includes("floating") || rateKey.includes("efektif") || rateKey.includes("effective")) {
+                const factor = Math.pow(1 + monthlyRate, tenor);
+                return roundRupiah((principal * monthlyRate * factor) / (factor - 1));
+            }
+
+            return roundRupiah((principal / tenor) + (principal * monthlyRate));
+        }
+
+        function collectHistory(row) {
+            const result = [];
+            for (let index = 1; index <= 24; index += 1) {
+                const suffix = String(index).padStart(2, "0");
+                const ym = row["tahunBulan" + suffix];
+                if (!ym) continue;
+                const kol = toNumber(row["tahunBulan" + suffix + "Kol"]);
+                const days = toNumber(row["tahunBulan" + suffix + "Ht"]);
+                if (!kol && !days) continue;
+                result.push({
+                    ym: String(ym),
+                    label: formatYearMonth(ym),
+                    kol,
+                    days
+                });
+            }
+            return result;
+        }
+
+        function buildNote(row, quality, currentDays, problemHistory) {
+            const base = String(row.kualitasKet || qualityLabel(quality));
+            if (quality <= 1 && currentDays <= 0 && !problemHistory.length) {
+                return base;
+            }
+
+            const latest = problemHistory[problemHistory.length - 1];
+            const details = [];
+            if (quality > 1) details.push("KOL " + quality);
+            if (currentDays > 0) details.push(currentDays + " hari");
+            if (latest) details.push(latest.label + " KOL " + latest.kol + " HT " + latest.days);
+            return base + " (" + details.join(", ") + ")";
+        }
+
+        function renderMeta() {
+            const debtorName = state.debtor.namaDebitur || "-";
+            const identity = state.debtor.noIdentitas || (state.individual.parameterPencarian || {}).noIdentitas || "-";
+            const position = formatYearMonth(state.individual.posisiDataTerakhir || "");
+            const pulled = formatDateTime(state.header.tanggalHasil || state.individual.tanggalPermintaan);
+
+            document.getElementById("debtorTitle").textContent = debtorName.toUpperCase();
+            document.getElementById("metaGrid").innerHTML = [
+                "<strong>Nama Debitur:</strong> " + escapeHtml(debtorName),
+                "<strong>No. Identitas:</strong> " + escapeHtml(identity),
+                "<strong>Posisi Data:</strong> " + escapeHtml(position),
+                "<strong>Tanggal Tarik:</strong> " + escapeHtml(pulled)
+            ].map((value) => '<div class="meta-cell">' + value + "</div>").join("");
+        }
+
+        function renderCurrentFilter() {
+            const type = filterSelect.value;
+            let rows = state.facilities.slice();
+
+            if (type === "active") {
+                rows = rows.filter(isActiveOrWrittenOff);
+            } else if (type === "lancar") {
+                rows = rows.filter((row) => row.quality === 1 && !row.hasProblem);
+            } else if (type === "kolek") {
+                rows = rows.filter((row) => row.hasProblem);
+            } else if (type === "lunas") {
+                rows = rows.filter((row) => /lunas/i.test(row.condition));
+            }
+
+            state.viewRows = rows;
+            renderTable(rows);
+            renderHistory(rows);
+        }
+
+        function renderTable(rows) {
+            if (!rows.length) {
+                tableBody.innerHTML = '<tr><td class="empty" colspan="7">Tidak ada data sesuai filter.</td></tr>';
+                tableFoot.innerHTML = "";
+                return;
+            }
+
+            tableBody.innerHTML = rows.map((row) => {
+                const rowClass = row.hasProblem ? "row-problem" : "row-active";
+                return '<tr class="' + rowClass + '">' +
+                    "<td>" + escapeHtml(row.reporter) + "</td>" +
+                    '<td class="num">' + formatNumber(row.outstanding) + "</td>" +
+                    '<td class="center">' + row.maturityText + "</td>" +
+                    "<td>" + escapeHtml(row.condition) + "</td>" +
+                    '<td class="num">' + row.quality + "</td>" +
+                    "<td>" + escapeHtml(row.note) + "</td>" +
+                    '<td class="num">' + formatNumber(row.simulation) + "</td>" +
+                "</tr>";
+            }).join("");
+
+            const totalOutstanding = rows.reduce((sum, row) => sum + row.outstanding, 0);
+            const totalSimulation = rows.reduce((sum, row) => sum + row.simulation, 0);
+
+            tableFoot.innerHTML = '<tr>' +
+                '<td class="center">TOTAL</td>' +
+                '<td class="num">' + formatNumber(totalOutstanding) + "</td>" +
+                '<td></td><td></td><td></td><td></td>' +
+                '<td class="num">' + formatNumber(totalSimulation) + "</td>" +
+            "</tr>";
+        }
+
+        function renderHistory(rows) {
+            const problemItems = [];
+            rows.forEach((row) => {
+                row.problemHistory.forEach((item) => {
+                    problemItems.push(row.reporter + " - " + item.label + " KOL " + item.kol + ", " + item.days + " hari tunggakan");
+                });
+                if (row.currentDays > 0 && !row.problemHistory.length) {
+                    problemItems.push(row.reporter + " - saat ini KOL " + row.quality + ", " + row.currentDays + " hari tunggakan");
+                }
+            });
+
+            if (!problemItems.length) {
+                historyContent.textContent = "Tidak ada riwayat KOL > 1 atau hari tunggakan pada data yang tampil.";
+                return;
+            }
+
+            historyContent.innerHTML = '<ol class="history-list">' +
+                problemItems.map((item) => "<li>" + escapeHtml(item) + "</li>").join("") +
+            "</ol>";
+        }
+
+        async function exportPdf() {
+            if (!state.facilities.length) return;
+            const name = (state.debtor.namaDebitur || "SLIK").replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "");
+            document.body.classList.add("print-mode");
+
+            try {
+                if (!window.html2pdf) {
+                    window.print();
+                    return;
+                }
+
+                await html2pdf()
+                    .set({
+                        margin: [4, 4, 4, 4],
+                        filename: "Analisis_SLIK_" + name + ".pdf",
+                        image: { type: "jpeg", quality: 1 },
+                        html2canvas: { scale: 3, useCORS: true },
+                        jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
+                        pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+                    })
+                    .from(document.getElementById("printArea"))
+                    .save();
+            } finally {
+                document.body.classList.remove("print-mode");
+            }
+        }
+
+        function resetApp() {
+            state.fileName = "";
+            state.header = {};
+            state.individual = {};
+            state.debtor = {};
+            state.facilities = [];
+            state.viewRows = [];
+            exportBtn.disabled = true;
+            resetBtn.disabled = true;
+            setStatus("Belum ada data");
+            document.getElementById("debtorTitle").textContent = "-";
+            document.getElementById("metaGrid").innerHTML = [
+                "<strong>Nama Debitur:</strong> -",
+                "<strong>No. Identitas:</strong> -",
+                "<strong>Posisi Data:</strong> -",
+                "<strong>Tanggal Tarik:</strong> -"
+            ].map((value) => '<div class="meta-cell">' + value + "</div>").join("");
+            tableBody.innerHTML = '<tr><td class="empty" colspan="7">Data akan tampil setelah file TXT dimuat.</td></tr>';
+            tableFoot.innerHTML = "";
+            historyContent.textContent = "-";
+        }
+
+        function showError(error) {
+            setStatus(error.message || "Gagal membaca file.");
+        }
+
+        function setStatus(text) {
+            statusText.textContent = text;
+        }
+
+        function toNumber(value) {
+            if (typeof value === "number" && Number.isFinite(value)) return value;
+            const cleaned = String(value ?? "")
+                .replace(/[^\d,.-]/g, "")
+                .replace(/\.(?=\d{3}(\D|$))/g, "")
+                .replace(",", ".");
+            const parsed = Number.parseFloat(cleaned);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function clampInt(value, min, max) {
+            const parsed = Math.round(toNumber(value));
+            return Math.min(max, Math.max(min, parsed || min));
+        }
+
+        function roundRupiah(value) {
+            return Math.round(Number.isFinite(value) ? value : 0);
+        }
+
+        function parseSlikDate(value) {
+            const text = String(value || "").replace(/\D/g, "");
+            if (text.length < 8) return null;
+            return new Date(Number(text.slice(0, 4)), Number(text.slice(4, 6)) - 1, Number(text.slice(6, 8)));
+        }
+
+        function monthDiff(start, end) {
+            if (!start || !end) return 1;
+            let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+            if (end.getDate() < start.getDate()) months -= 1;
+            return Math.max(1, months);
+        }
+
+        function formatDate(date) {
+            if (!date) return "-";
+            return [
+                String(date.getDate()).padStart(2, "0"),
+                String(date.getMonth() + 1).padStart(2, "0"),
+                date.getFullYear()
+            ].join("-");
+        }
+
+        function formatDateTime(value) {
+            const text = String(value || "").replace(/\D/g, "");
+            if (text.length < 8) return "-";
+            const date = parseSlikDate(text.slice(0, 8));
+            if (!date) return "-";
+            if (text.length < 14) return formatDate(date);
+            return formatDate(date) + " " + text.slice(8, 10) + ":" + text.slice(10, 12) + ":" + text.slice(12, 14);
+        }
+
+        function formatYearMonth(value) {
+            const text = String(value || "").replace(/\D/g, "");
+            if (text.length !== 6) return value || "-";
+            return text.slice(4, 6) + "-" + text.slice(0, 4);
+        }
+
+        function formatNumber(value) {
+            return Math.round(toNumber(value)).toLocaleString("id-ID");
+        }
+
+        function formatRate(value) {
+            const rounded = Math.round(toNumber(value) * 100) / 100;
+            return Number.isInteger(rounded) ? String(rounded) : String(rounded).replace(".", ",");
+        }
+
+        function normalizeRateLabel(value) {
+            return String(value || "Suku Bunga Fixed").replace(/\s+/g, "");
+        }
+
+        function qualityLabel(value) {
+            const labels = {
+                1: "Lancar",
+                2: "Dalam Perhatian Khusus",
+                3: "Kurang Lancar",
+                4: "Diragukan",
+                5: "Macet"
+            };
+            return labels[value] || "-";
+        }
+
+        function compactName(value) {
+            return String(value || "-").replace(/\s+/g, "");
+        }
+
+        function normalizeText(value) {
+            return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        }
+
+        function isActiveOrWrittenOff(row) {
+            return /aktif/i.test(row.condition) || isWrittenOffCondition(row.condition);
+        }
+
+        function isWrittenOffCondition(value) {
+            const key = normalizeText(value);
+            return key.includes("hapusbuku") || key.includes("writeoff") || key.includes("writtenoff");
+        }
+
+        function isIos() {
+            return /iphone|ipad|ipod/i.test(navigator.userAgent || "");
+        }
+
+        function isStandaloneMode() {
+            return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+        }
+
+        function isLocalPreview() {
+            return location.protocol === "file:"
+                || location.hostname === "localhost"
+                || location.hostname === "127.0.0.1"
+                || location.hostname === "0.0.0.0";
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
